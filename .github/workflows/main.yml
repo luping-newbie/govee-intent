@@ -3,7 +3,7 @@ name: Deploy Azure Container App
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -26,10 +26,10 @@ jobs:
 
       - name: Build and push image
         run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }} ./src
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }} ./server
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Replace variables in containerapp.yaml
+       - name: Replace variables in containerapp.yaml
         run: |
           sed -i "s|<ACR_LOGIN_SERVER>|${{ secrets.ACR_LOGIN_SERVER }}|g" ${{ github.workspace }}/containerapp.yaml
           sed -i "s|<ACR_USERNAME>|${{ secrets.ACR_USERNAME }}|g" ${{ github.workspace }}/containerapp.yaml
@@ -38,6 +38,7 @@ jobs:
           sed -i "s|<TAG>|${{ github.sha }}|g" ${{ github.workspace }}/containerapp.yaml
           echo "Updated containerapp.yaml with ACR credentials and image name"
           cat ${{ github.workspace }}/containerapp.yaml
+
       - name: Deploy Container App using YAML
         uses: azure/container-apps-deploy-action@v1
         with:
