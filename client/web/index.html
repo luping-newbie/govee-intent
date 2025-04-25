@@ -1,0 +1,46 @@
+<!--
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+-->
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime API with openai-node SDK</title>
+</head>
+
+<body>
+  <div id="app">
+    <form>
+      <div class="container">
+        <div id="received-text-container"></div>
+        <div class="controls">
+          <div class="input-group">
+            <label for="user-id">User ID</label>
+            <input id="userid" type="text" placeholder="Enter User Id" />
+          </div>
+          <div class="button-group">
+            <button id="authenticate" type="button">Authenticate</button>
+            <button id="start-recording" type="button" disabled="true">Record</button>
+            <button id="stop-recording" type="button" disabled="true">Stop</button>
+            <button id="clear-all" type="button">Reset</button>
+          </div>
+          <div class="input-group">
+            <label for="user-message">User Message</label>
+            <textarea id="user-message-area" placeholder="Enter your text here"></textarea>
+          </div>
+          <div class="button-group">
+            <button id="send-message" type="button">Send</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

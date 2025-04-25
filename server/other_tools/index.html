@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Audio Chat</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .recording {
+            background-color: red !important;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="messages" id="messages"></div>
+        <div class="controls">
+            <button id="connectBtn">Connect</button>
+            <button id="recordBtn">Start Recording</button>
+        </div>
+    </div>
+
+    <script>
+        class AudioRecorder {
+            constructor(websocket) {
+                this.websocket = websocket;
+                this.recording = false;
+                this.mediaRecorder = null;
+                this.audioContext = null;
+                this.processor = null;
+                this.stream = null;
+            }
+
+            async start() {
+                if (this.recording) return;
+
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.audioContext = new AudioContext();
+                    const source = this.audioContext.createMediaStreamSource(this.stream);
+                    this.processor = this.audioContext.createScriptProcessor(1024, 1, 1);
+
+                    source.connect(this.processor);
+                    this.processor.connect(this.audioContext.destination);
+
+                    this.processor.onaudioprocess = (e) => {
+                        if (!this.recording) return;
+                        
+                        // Convert audio to 16-bit PCM
+                        const inputData = e.inputBuffer.getChannelData(0);
+                        const pcmData = new Int16Array(inputData.length);
+                        for (let i = 0; i < inputData.length; i++) {
+                            pcmData[i] = inputData[i] * 0x7FFF;
+                        }
+                        
+                        // Send audio data through WebSocket
+                        if (this.websocket.readyState === WebSocket.OPEN) {
+                            this.websocket.send(pcmData.buffer);
+                        }
+                    };
+
+                    this.recording = true;
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    throw error;
+                }
+            }
+
+            stop() {
+                this.recording = false;
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                if (this.processor) {
+                    this.processor.disconnect();
+                    this.processor = null;
+                }
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+            }
+        }
+
+        class ChatApp {
+            constructor() {
+                this.websocket = null;
+                this.recorder = null;
+                this.connectBtn = document.getElementById('connectBtn');
+                this.recordBtn = document.getElementById('recordBtn');
+                this.messagesDiv = document.getElementById('messages');
+
+                this.connectBtn.addEventListener('click', () => this.toggleConnection());
+                this.recordBtn.addEventListener('click', () => this.toggleRecording());
+                
+                this.recordBtn.disabled = true;
+            }
+
+            async connect() {
+                // 这里应该先调用后端的 /connect/{user_id} 接口获取 user_key
+                const userId = 'test-user-' + Date.now();
+                const response = await fetch(`http://localhost:8000/connect/${userId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                const userKey = data.user_key;
+
+                this.websocket = new WebSocket(`ws://localhost:8000/realtime/${userKey}`);
+                this.recorder = new AudioRecorder(this.websocket);
+
+                this.websocket.onopen = () => {
+                    this.log('Connected to server 123');
+                    this.connectBtn.textContent = 'Disconnect';
+                    this.recordBtn.disabled = false;
+                };
+
+                this.websocket.onmessage = (event) => {
+                    if (event.data instanceof Blob) {
+                        // Handle audio data from server
+                        this.playAudio(event.data);
+                    } else {
+                        // Handle text messages
+                        const message = JSON.parse(event.data);
+                        this.handleMessage(message);
+                    }
+                };
+
+                this.websocket.onclose = () => {
+                    this.log('Disconnected from server');
+                    this.cleanup();
+                };
+
+                this.websocket.onerror = (error) => {
+                    this.log('WebSocket error: ' + error);
+                    this.cleanup();
+                };
+            }
+
+            disconnect() {
+                if (this.websocket) {
+                    this.websocket.close();
+                }
+            }
+
+            toggleConnection() {
+                if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                    this.disconnect();
+                } else {
+                    this.connect();
+                }
+            }
+
+            async toggleRecording() {
+                if (!this.recorder) return;
+
+                if (!this.recorder.recording) {
+                    try {
+                        await this.recorder.start();
+                        this.recordBtn.textContent = 'Stop Recording';
+                        this.recordBtn.classList.add('recording');
+                    } catch (error) {
+                        this.log('Failed to start recording: ' + error);
+                    }
+                } else {
+                    this.recorder.stop();
+                    this.recordBtn.textContent = 'Start Recording';
+                    this.recordBtn.classList.remove('recording');
+                }
+            }
+
+            cleanup() {
+                if (this.recorder) {
+                    this.recorder.stop();
+                }
+                this.connectBtn.textContent = 'Connect';
+                this.recordBtn.disabled = true;
+                this.recordBtn.textContent = 'Start Recording';
+                this.recordBtn.classList.remove('recording');
+                this.websocket = null;
+                this.recorder = null;
+            }
+
+            handleMessage(message) {
+                switch (message.type) {
+                    case 'text_delta':
+                        this.log(`Received text: ${message.delta}`);
+                        break;
+                    case 'transcription':
+                        this.log(`Transcription: ${message.text}`);
+                        break;
+                    case 'control':
+                        this.log(`Control message: ${message.action}`);
+                        break;
+                    default:
+                        this.log(`Unknown message type: ${message.type}`);
+                }
+            }
+
+            async playAudio(blob) {
+                const audio = new Audio(URL.createObjectURL(blob));
+                await audio.play();
+            }
+
+            log(message) {
+                const div = document.createElement('div');
+                div.textContent = message;
+                this.messagesDiv.appendChild(div);
+                this.messagesDiv.scrollTop = this.messagesDiv.scrollHeight;
+            }
+        }
+
+        // Initialize the app
+        const app = new ChatApp();
+    </script>
+</body>
+</html>

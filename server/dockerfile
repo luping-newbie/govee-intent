@@ -1,0 +1,25 @@
+# 使用Python 3.12作为基础镜像
+FROM python:3.12-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制requirements.txt
+COPY requirements.txt .
+
+# 安装项目依赖
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制项目文件
+COPY . .
+
+# 设置环境变量
+ENV PYTHONUNBUFFERED=1
+
+# 暴露端口（FastAPI 默认使用 8000）
+EXPOSE 8000
+
+# 使用uvicorn启动应用
+# host设置为0.0.0.0使得容器外可以访问
+# --reload在生产环境中应该移除
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
