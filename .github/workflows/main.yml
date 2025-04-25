@@ -1,0 +1,47 @@
+name: Deploy Azure Container App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push image
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }} ./server
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+
+       - name: Replace variables in containerapp.yaml
+        run: |
+          sed -i "s|<ACR_LOGIN_SERVER>|${{ secrets.ACR_LOGIN_SERVER }}|g" ${{ github.workspace }}/containerapp.yaml
+          sed -i "s|<ACR_USERNAME>|${{ secrets.ACR_USERNAME }}|g" ${{ github.workspace }}/containerapp.yaml
+          sed -i "s|<ACR_PASSWORD>|${{ secrets.ACR_PASSWORD }}|g" ${{ github.workspace }}/containerapp.yaml
+          sed -i "s|<IMAGE_NAME>|${{ secrets.IMAGE_NAME }}|g" ${{ github.workspace }}/containerapp.yaml
+          sed -i "s|<TAG>|${{ github.sha }}|g" ${{ github.workspace }}/containerapp.yaml
+          echo "Updated containerapp.yaml with ACR credentials and image name"
+          cat ${{ github.workspace }}/containerapp.yaml
+
+      - name: Deploy Container App using YAML
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          resourceGroup: ${{ secrets.RESOURCE_GROUP }}
+          containerAppName: csharp-container
+          yamlConfigPath: ${{ github.workspace }}/containerapp.yaml
