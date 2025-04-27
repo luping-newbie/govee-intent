@@ -2,7 +2,7 @@ name: action-intent-app
 type: Microsoft.App/containerApps
 location: eastus2
 properties:
-  environmentId: /subscriptions/f743dc6f-1fea-4393-82c0-2b204d3b820c/resourceGroups/resource-group-ping/providers/Microsoft.App/managedEnvironments/east-us2-containerapps-env
+  environmentId:  /subscriptions/f743dc6f-1fea-4393-82c0-2b204d3b820c/resourceGroups/resource-group-ping/providers/Microsoft.App/managedEnvironments/east-us2-containerapps-env
   configuration:
     ingress:
       external: true
