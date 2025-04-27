@@ -1,4 +1,4 @@
-name: csharp-container
+name: action-intent-app
 type: Microsoft.App/containerApps
 location: eastus2
 properties:
