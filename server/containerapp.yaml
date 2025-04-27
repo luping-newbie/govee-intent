@@ -21,14 +21,14 @@ properties:
       - name: govee-intent
         image: <ACR_LOGIN_SERVER>/<IMAGE_NAME>:<TAG>
         env:
-          - name: AZURE_OPENAI_ENDPOINT
-            value: <AZURE_OPENAI_ENDPOINT>
-          - name: AZURE_OPENAI_API_KEY
-            value: <AZURE_OPENAI_API_KEY>
-          - name: AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION
-            value: <AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION>
-          - name: AZURE_OPENAI_CHAT_DEPLOYMENT
-            value: <AZURE_OPENAI_CHAT_DEPLOYMENT>
+          - name: AZURE_OPENAI_ENDPOINT
+            value: <AZURE_OPENAI_ENDPOINT>
+          - name: AZURE_OPENAI_API_KEY
+            value: <AZURE_OPENAI_API_KEY>
+          - name: AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION
+            value: <AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION>
+          - name: AZURE_OPENAI_CHAT_DEPLOYMENT
+            value: <AZURE_OPENAI_CHAT_DEPLOYMENT>
         resources:
           cpu: 1
           memory: 2Gi
