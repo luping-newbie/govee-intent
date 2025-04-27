@@ -44,6 +44,10 @@ jobs:
           sed -i "s|<ACR_PASSWORD>|${{ secrets.ACR_PASSWORD }}|g" ${{ github.workspace }}/server/containerapp.yaml
           sed -i "s|<IMAGE_NAME>|${{ secrets.IMAGE_NAME }}|g" ${{ github.workspace }}/server/containerapp.yaml
           sed -i "s|<TAG>|${{ github.sha }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_ENDPOINT>|${{ secrets.AZURE_OPENAI_ENDPOINT }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_API_KEY>|${{ secrets.AZURE_OPENAI_API_KEY }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION>|${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_CHAT_DEPLOYMENT>|${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}|g" ${{ github.workspace }}/server/containerapp.yaml
           echo "Updated containerapp.yaml with ACR credentials and image name"
           cat ${{ github.workspace }}/server/containerapp.yaml
 
