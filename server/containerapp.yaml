@@ -1,9 +1,8 @@
-name: csharp-container
+name: action-intent-app
 type: Microsoft.App/containerApps
 location: eastus2
 properties:
-  environmentId: 
-/subscriptions/f743dc6f-1fea-4393-82c0-2b204d3b820c/resourceGroups/resource-group-ping/providers/Microsoft.App/managedEnvironments/east-us2-containerapps-env
+  environmentId:  /subscriptions/f743dc6f-1fea-4393-82c0-2b204d3b820c/resourceGroups/resource-group-ping/providers/Microsoft.App/managedEnvironments/test-govee-env
   configuration:
     ingress:
       external: true
@@ -21,6 +20,15 @@ properties:
     containers:
       - name: govee-intent
         image: <ACR_LOGIN_SERVER>/<IMAGE_NAME>:<TAG>
+        env:
+          - name: AZURE_OPENAI_ENDPOINT
+            value: <AZURE_OPENAI_ENDPOINT>
+          - name: AZURE_OPENAI_API_KEY
+            value: <AZURE_OPENAI_API_KEY>
+          - name: AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION
+            value: <AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION>
+          - name: AZURE_OPENAI_CHAT_DEPLOYMENT
+            value: <AZURE_OPENAI_CHAT_DEPLOYMENT>
         resources:
           cpu: 1
           memory: 2Gi

@@ -8,12 +8,20 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Check if secrets are injected
+        run: |
+          if [ -z "${{ secrets.AZURE_CREDENTIALS }}" ]; then
+            echo "AZURE_CREDENTIALS is NOT set"
+          else
+            echo "AZURE_CREDENTIALS is set"
+          fi
 
       - name: Log in to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -28,20 +36,24 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }} ./server
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
-
-       - name: Replace variables in containerapp.yaml
+          
+      - name: Replace variables in containerapp.yaml
         run: |
-          sed -i "s|<ACR_LOGIN_SERVER>|${{ secrets.ACR_LOGIN_SERVER }}|g" ${{ github.workspace }}/containerapp.yaml
-          sed -i "s|<ACR_USERNAME>|${{ secrets.ACR_USERNAME }}|g" ${{ github.workspace }}/containerapp.yaml
-          sed -i "s|<ACR_PASSWORD>|${{ secrets.ACR_PASSWORD }}|g" ${{ github.workspace }}/containerapp.yaml
-          sed -i "s|<IMAGE_NAME>|${{ secrets.IMAGE_NAME }}|g" ${{ github.workspace }}/containerapp.yaml
-          sed -i "s|<TAG>|${{ github.sha }}|g" ${{ github.workspace }}/containerapp.yaml
+          sed -i "s|<ACR_LOGIN_SERVER>|${{ secrets.ACR_LOGIN_SERVER }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<ACR_USERNAME>|${{ secrets.ACR_USERNAME }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<ACR_PASSWORD>|${{ secrets.ACR_PASSWORD }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<IMAGE_NAME>|${{ secrets.IMAGE_NAME }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<TAG>|${{ github.sha }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_ENDPOINT>|${{ secrets.AZURE_OPENAI_ENDPOINT }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_API_KEY>|${{ secrets.AZURE_OPENAI_API_KEY }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION>|${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION }}|g" ${{ github.workspace }}/server/containerapp.yaml
+          sed -i "s|<AZURE_OPENAI_CHAT_DEPLOYMENT>|${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}|g" ${{ github.workspace }}/server/containerapp.yaml
           echo "Updated containerapp.yaml with ACR credentials and image name"
-          cat ${{ github.workspace }}/containerapp.yaml
+          cat ${{ github.workspace }}/server/containerapp.yaml
 
       - name: Deploy Container App using YAML
         uses: azure/container-apps-deploy-action@v1
         with:
           resourceGroup: ${{ secrets.RESOURCE_GROUP }}
-          containerAppName: csharp-container
-          yamlConfigPath: ${{ github.workspace }}/containerapp.yaml
+          containerAppName: action-intent-app
+          yamlConfigPath: ${{ github.workspace }}/server/containerapp.yaml
