@@ -1,6 +1,6 @@
 from typing import Literal, List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -149,6 +149,18 @@ async def handle_request(req: UserRequest):
         logger.error(f"处理请求失败: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+@app.post("/notification")
+async def handle_notification(request: Request):
+    try:
+        data = await request.json()
+        print(f"收到通知: {data}")
+        # data = await request.json()
+        # data = "收到通知"
+        return {"status": "success", "received": data}
+    except Exception as e:
+        logger.error(f"处理请求失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    
 
 @app.get("/health")
 def health_check():
