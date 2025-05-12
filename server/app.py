@@ -164,7 +164,7 @@ async def handle_notification(request: Request):
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.0"}
 
 
 if __name__ == "__main__":

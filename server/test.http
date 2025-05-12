@@ -1,0 +1,10 @@
+
+POST https://action-intent-app.redbay-ba85b609.eastus2.azurecontainerapps.io/notification
+Content-Type: application/json
+
+
+{
+     "name": "Ping Lu",
+     "role": "Sr Account Tech Strategist",
+     "email": "luping@microsoft.com"
+}
