@@ -1,10 +1,22 @@
-
-POST https://action-intent-app.redbay-ba85b609.eastus2.azurecontainerapps.io/notification
+@baseurl = http://localhost:8001
+### 测试通知服务
+POST {{baseurl}}/notification
 Content-Type: application/json
-
 
 {
      "name": "Ping Lu",
      "role": "Sr Account Tech Strategist",
      "email": "luping@microsoft.com"
+}
+
+### 判断服务健康
+GET {{baseurl}}/health
+
+### 请求意图识别服务
+POST  {{baseurl}}/request
+Content-type: application/json
+
+{
+     "content":"bought a light, but not work. I have tried many times",
+     "history":[]
 }
