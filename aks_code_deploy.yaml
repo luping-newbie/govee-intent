@@ -1,0 +1,67 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: action-intent-deployment
+  namespace: ping-workspace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: action-intent-pod
+  template:
+    metadata:
+      labels:
+          app: action-intent-pod
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: action-intent-pod
+          image: goveerepo.azurecr.io/action-intent:6eeb1ec17d4f26f5cd655d39b728e24b97da513b
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: '1'
+              memory: 2G
+            limits:
+              cpu: '1'
+              memory: 2G
+          env:
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: govee-intent-config
+                  key: AZURE_OPENAI_API_KEY
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: govee-intent-config
+                  key: AZURE_OPENAI_ENDPOINT
+            - name: AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: govee-intent-config
+                  key: AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION
+            - name: AZURE_OPENAI_CHAT_DEPLOYMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: govee-intent-config
+                  key: AZURE_OPENAI_CHAT_DEPLOYMENT
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: action-intent-service
+    namespace: ping-workspace
+spec:
+    type: LoadBalancer
+    ports:
+      - targetPort: 8000
+        name: port80
+        port: 80
+        protocol: TCP
+    selector:
+      app: action-intent-pod

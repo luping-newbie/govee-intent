@@ -1,0 +1,14 @@
+apiVersion: karpenter.azure.com/v1beta1
+kind: NodeClass
+metadata:
+  name: azure-nodeclass
+spec:
+  vmSize: Standard_D4ds_v4
+  location: eastus
+  osDiskSizeGB: 128
+  subnetId: /subscriptions/f743dc6f-1fea-4393-82c0-2b204d3b820c/resourceGroups/resource-group-ping/providers/Microsoft.Network/virtualNetworks/resource-group-ping-vnet-7249fdc3-25f3-483b-85a9-a16e7e3c67dd/subnets/default
+  imageReference:
+    publisher: Canonical
+    offer: UbuntuServer
+    sku: 18.04-LTS
+    version: latest

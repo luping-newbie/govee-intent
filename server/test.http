@@ -1,4 +1,4 @@
-@baseurl = http://localhost:8001
+@baseurl = http://57.152.92.28:80
 ### 测试通知服务
 POST {{baseurl}}/notification
 Content-Type: application/json

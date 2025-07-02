@@ -1,0 +1,43 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: nap-pool
+spec:
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
+  # Resource limits constrain the total size of the cluster.
+  # Limits prevent Karpenter from creating new instances once the limit is exceeded.
+  limits:
+      cpu: "0"
+      memory: 200Gi
+  # Priority given to the node pool when the scheduler considers which to select. Higher weights indicate higher priority when comparing node pools.
+  # Specifying no weight is equivalent to specifying a weight of 0.
+  weight: 10
+  template:
+    spec:
+      nodeClassRef:
+        name: default 
+        group: karpenter.azure.com
+        kind: AKSNodeClass
+      # Requirements that constrain the parameters of provisioned nodes.
+      # These requirements are combined with pod.spec.affinity.nodeAffinity rules.
+      # Operators { In, NotIn, Exists, DoesNotExist, Gt, and Lt } are supported.
+      # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#operators
+      requirements:
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - amd64
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - on-demand
+      - key: karpenter.azure.com/sku-family
+        operator: In
+        values:
+        - D
