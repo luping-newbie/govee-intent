@@ -15,7 +15,6 @@ data:
   AZURE_OPENAI_ENDPOINT: "https://ping-openai-eastus2.openai.azure.com/"
   AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION: "2024-10-01-preview"
   AZURE_OPENAI_CHAT_DEPLOYMENT: "gpt-4o-mini"
-  AZURE_OPENAI_API_KEY: "C5Xlu3ENyM83x5lkrXlxFgBp9VJXgoIAkFn9eK9YsvBkNYZDkbyaJQQJ99ALACHYHv6XJ3w3AAABACOGiZie"
 ---  
 apiVersion: v1
 kind: Secret
@@ -24,4 +23,3 @@ metadata:
   namespace: ping-workspace  # 根据实际命名空间调整
 type: Opaque
 data:
-  AZURE_OPENAI_API_KEY: "C5Xlu3ENyM83x5lkrXlxFgBp9VJXgoIAkFn9eK9YsvBkNYZDkbyaJQQJ99ALACHYHv6XJ3w3AAABACOGiZie"
