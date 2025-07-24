@@ -9,7 +9,7 @@ Content-Type: application/json
      "email": "luping@microsoft.com"
 }
 
-### 判断服务健康
+### 判断服务健康度
 GET {{baseurl}}/health
 
 ### 请求意图识别服务
