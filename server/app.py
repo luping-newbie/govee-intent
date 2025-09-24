@@ -13,12 +13,17 @@ from dotenv import load_dotenv
 from rtclient.labels import get_map_dict
 from rtclient.prompts import get_system_prompt
 
-from tools import tool_schemas, metadata_map  # 假设这些模块仍然需要
+from tools import tool_schemas, metadata_map, trace_config # 假设这些模块仍然需要
 from openai import AzureOpenAI
 
 from utils import anonymize_text
+import uuid
+import time
 
 load_dotenv()
+# 主程序中初始化 OpenTelemetry 配置
+connection_string = os.getenv("OPENTELEMETRY_CONN_STRING")
+tracer = trace_config.init_trace_config(connection_string,"govee-knowledge")
 
 class Message(BaseModel):
     role: Literal["user", "assistant"]  # 必须为这两种角色
@@ -38,11 +43,13 @@ class ChatProcessor:
             api_version=os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT_VERSION"),
         )
         self.system_role = get_system_prompt()
+
         logger.info("Chat processor initialized")
 
 
-
+    @tracer.start_as_current_span("process_chat")
     def process_chat(self, request):
+        start = time.time()
         # messages = [
         #     {"role": "system", "content": self.system_role},
         #     {"role": "user", "content": content}
@@ -84,9 +91,11 @@ class ChatProcessor:
             temperature=0.00000001,
             top_p=0.00000001
         )
-
+        end = time.time()
+        print(f"process_chat 处理请求耗时: {end - start:.2f}秒")
         return self._handle_response(response)
 
+    @tracer.start_as_current_span("handle_response")
     def _handle_response(self, response):
         response_message = response.choices[0].message
         logger.info(f"API响应内容: {response_message.content}")
@@ -134,8 +143,13 @@ app.add_middleware(
 
 
 @app.post("/request")
+@tracer.start_as_current_span("handle_request")
 async def handle_request(req: UserRequest):
+    
     try:
+        random_id = str(uuid.uuid4())
+        start = time.time()
+
         result = chat_processor.process_chat(req)
         print(result)
         issue_label = result.get('args', {}).get('issue_label')
@@ -144,6 +158,10 @@ async def handle_request(req: UserRequest):
         else:
             # 使用之前创建的映射关系获取 一级类别
             result["label"] = get_map_dict().get(issue_label,"其他")
+
+        end = time.time()
+        print(f"Request ID:{random_id}, handle_request 处理请求耗时: {end - start:.2f}秒")
+        
         return JSONResponse(content={"response": result})
     except Exception as e:
         logger.error(f"处理请求失败: {str(e)}")
@@ -168,4 +186,4 @@ def health_check():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info", workers=4)
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info", workers= 4)
