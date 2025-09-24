@@ -22,4 +22,4 @@ EXPOSE 8000
 # 使用uvicorn启动应用
 # host设置为0.0.0.0使得容器外可以访问
 # --reload在生产环境中应该移除
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["gunicorn", "app:app", "-k", "uvicorn.workers.UvicornWorker", "--workers", "4", "--bind", "0.0.0.0:8000"]
