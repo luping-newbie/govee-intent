@@ -1,5 +1,5 @@
 
-name: Deploy and update Azure Container App
+name: Deploy and update Azure Container App testv1
 
 on:
   push:
